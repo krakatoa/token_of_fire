@@ -1,6 +1,6 @@
 # TokenOfFire
 
-TODO: Write a gem description
+Celluloid based Event bus
 
 ## Installation
 
