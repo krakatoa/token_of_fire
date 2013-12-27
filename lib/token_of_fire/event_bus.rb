@@ -1,4 +1,5 @@
 require 'celluloid'
+require 'forwardable'
 
 module TokenOfFire
   Event = Struct.new(:name, :scope, :payload)
@@ -7,15 +8,17 @@ module TokenOfFire
     include Celluloid
     exclusive :subscribe
 
+    extend Forwardable
+    def_delegators :@global_scope, :scope, :token, :unique_token
+    def_delegators :@global_token, :attach
+
     def initialize
       @subscriptions = TokenOfFire::Subscriptions.new
+      @global_scope = TokenOfFire::Scope.new(Celluloid::Actor.current)
+      @global_token = @global_scope.token
       self
     end
 
-    def scope(filter={})
-      TokenOfFire::Scope.new(Celluloid::Actor.current, filter, true)
-    end
-    
     def subscribe(event_name, scope, handler, handler_method)
       uuid = @subscriptions.subscribe(event_name, scope, handler, handler_method)
       # $stdout.puts "-- Subscribe event_name: #{event_name} #{uuid}"
@@ -52,11 +55,13 @@ module TokenOfFire
       end
     end
 
-    def fire(event_name, scope, payload)
+    def fire(event_name, payload, scope=nil)
+      scope ||= @global_scope.filter
       perform(event_name, scope, payload, :async)
     end
 
-    def fire_sync(event_name, scope, payload)
+    def fire_sync(event_name, payload, scope=nil)
+      scope ||= @global_scope.filter
       perform(event_name, scope, payload, :sync)
     end
     

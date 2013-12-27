@@ -5,6 +5,7 @@ module TokenOfFire
       @scope = scope
       @uuid = SecureRandom.uuid
       @unique = unique
+      @subscription_uuids = []
       subscribe_to_all
     end
 
@@ -15,11 +16,11 @@ module TokenOfFire
     end
 
     def fire(event_name, payload)
-      @event_bus.fire(event_name, filter, payload)
+      @event_bus.fire(event_name, payload, filter)
     end
 
     def fire_sync
-      @event_bus.fire_sync(event_name, filter, payload)
+      @event_bus.fire_sync(event_name, payload, filter)
     end
 
     def release
@@ -28,12 +29,14 @@ module TokenOfFire
       end
     end
 
+    def attach(event_name, handler, method_name)
+      @subscription_uuids << @event_bus.subscribe(event_name, filter, handler, method_name)
+    end
+
     private
     def subscribe_to_all
-      @subscription_uuids = @scope.subscriptions.collect do |subscription|
-        @event_bus.subscribe(
-          subscription[:event_name], filter, subscription[:handler], subscription[:method_name]
-        )
+      @scope.subscriptions.each do |subscription|
+        attach(subscription[:event_name], subscription[:handler], subscription[:method_name])
       end
     end
   end

@@ -1,6 +1,6 @@
 module TokenOfFire
   class Scope
-    def initialize(event_bus, filter={}, single)
+    def initialize(event_bus, filter={})
       @event_bus = event_bus
       raise RuntimeError, "Provide hash please" unless filter.is_a? Hash
       @filter = filter
@@ -20,6 +20,10 @@ module TokenOfFire
         :method_name => method_name
       })
       @subscriptions
+    end
+
+    def scope(filter={})
+      TokenOfFire::Scope.new(@event_bus, @filter.merge(filter))
     end
 
     def subscriptions
