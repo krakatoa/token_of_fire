@@ -19,13 +19,19 @@ module TokenOfFire
       @event_bus.fire(event_name, payload, filter)
     end
 
-    def fire_sync
+    def fire_sync(event_name, payload)
       @event_bus.fire_sync(event_name, payload, filter)
     end
 
     def release
       @subscription_uuids.each do |uuid|
         @event_bus.unsubscribe(uuid)
+      end
+    end
+
+    def attach_subscriptions(list)
+      list.each do |t|
+        attach(t[0], t[1], t[2])
       end
     end
 
